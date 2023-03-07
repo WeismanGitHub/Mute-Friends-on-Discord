@@ -1,6 +1,6 @@
 const { Client, GatewayIntentBits } = require('discord.js');
 const {GlobalKeyboardListener} = require("node-global-key-listener");
-const commands = require('./commands')
+const hotkeys = require('./hotkeys')
 require('dotenv').config();
 
 const keyboardListener = new GlobalKeyboardListener();
@@ -9,6 +9,8 @@ const pressedKeys = new Set()
 const client = new Client({
     intents: [
         GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.GuildPresences,
+        GatewayIntentBits.GuildMembers,
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildVoiceStates,
     ]
@@ -33,21 +35,27 @@ keyboardListener.addListener(function (e, down) {
         return
     }
 
-    const command = commands[Array.from(pressedKeys).join(' ')]
+    const hotkeyData = hotkeys[Array.from(pressedKeys).join(' ')]
 
-    if (!command) {
+    if (!hotkeyData) {
         return
     }
 
-    const channel = client.channels.cache.get(process.env.CHANNEL_ID)
-    channel.send(`<@${command.discordId}>`)
+    const guild = client.guilds.cache.get(process.env.GUILD_ID)
+    const member = guild.members.cache.find(user => user.id == hotkeyData.discordId)
+
+    if (!member) {
+        return
+    }
+
+    member.voice.setMute(!member.voice.serverMute)
 });
 
 process.on('uncaughtException', function (err) {
     console.log(err)
 });
 
-process.on('unhandledRejection', error => {
+process.on('unhandledRejection', err => {
     console.log(err)
 });
 
