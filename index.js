@@ -1,8 +1,10 @@
 const { Client, GatewayIntentBits } = require('discord.js');
 const {GlobalKeyboardListener} = require("node-global-key-listener");
+const commands = require('./commands')
 require('dotenv').config();
 
 const keyboardListener = new GlobalKeyboardListener();
+const pressedKeys = new Set()
 
 const client = new Client({
     intents: [
@@ -18,9 +20,6 @@ client.on("ready", async () => {
     console.log('ready...')
 });
 
-const keyStrokes = new Set(['LEFT CTRL', 'LEFT ALT', 'NUMPAD 7'])
-const pressedKeys = new Set()
-
 keyboardListener.addListener(function (e, down) {
     const { name, state } = e
 
@@ -30,17 +29,18 @@ keyboardListener.addListener(function (e, down) {
         pressedKeys.delete(name)
     }
 
-    if (pressedKeys.size !== keyStrokes.size) {
+    if (pressedKeys.size !== 3) {
         return
     }
 
-    for (let stroke of pressedKeys) {
-        if (!keyStrokes.has(stroke)) {
-            return
-        }
+    const command = commands[Array.from(pressedKeys).join(' ')]
+
+    if (!command) {
+        return
     }
 
-    console.log('ctrl + alt + numpad 7 has been pressed!')
+    const channel = client.channels.cache.get(process.env.CHANNEL_ID)
+    channel.send(`<@${command.discordId}>`)
 });
 
 process.on('uncaughtException', function (err) {
