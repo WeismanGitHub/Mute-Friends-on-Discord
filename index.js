@@ -51,12 +51,4 @@ keyboardListener.addListener(function (e, down) {
     member.voice.setMute(!member.voice.serverMute)
 });
 
-process.on('uncaughtException', function (err) {
-    console.log(err)
-});
-
-process.on('unhandledRejection', err => {
-    console.log(err)
-});
-
 client.login(process.env.TOKEN);
